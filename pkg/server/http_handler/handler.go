@@ -1,21 +1,4 @@
-/*
- * Copyright (C) 2020-2022, IrineSistiana
- *
- * This file is part of mosdns.
- *
- * mosdns is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * mosdns is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
+
 
 package http_handler
 
@@ -31,7 +14,8 @@ import (
 	"go.uber.org/zap"
 	"io"
 	"net/http"
-	"net/netip"
+
+	"net"
 	"strings"
 )
 
@@ -82,7 +66,16 @@ func (h *Handler) warnErr(req *http.Request, msg string, err error) {
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	addrPort, err := netip.ParseAddrPort(req.RemoteAddr)
+	// addrPort, err := netip.ParseAddrPort(req.RemoteAddr)
+	//
+    ip, port, err := net.SplitHostPort(req.RemoteAddr)
+    if err != nil {
+        h.opts.Logger.Error("failed to parse request remote addr", zap.String("addr", req.RemoteAddr), zap.Error(err))
+        w.WriteHeader(http.StatusInternalServerError)
+        return
+    }
+    addrPort := netip.AddrPort{IP: netip.ParseIP(net.ParseIP(ip)), Port: netip.ParsePort(port)}
+	//
 	if err != nil {
 		h.opts.Logger.Error("failed to parse request remote addr", zap.String("addr", req.RemoteAddr), zap.Error(err))
 		w.WriteHeader(http.StatusInternalServerError)

@@ -81,7 +81,14 @@ func (s *Server) ServeTCP(l net.Listener) error {
 				firstReadTimeout = idleTimeout
 			}
 
-			clientAddr := utils.GetAddrFromAddr(c.RemoteAddr())
+			// clientAddr := utils.GetAddrFromAddr(c.RemoteAddr())
+			
+			clientAddr, _, err := net.SplitHostPort(c.RemoteAddr().String())
+            if err != nil {
+	            s.opts.Logger.Error("failed to parse request remote addr", zap.String("addr", c.RemoteAddr().String()), zap.Error(err))
+	            return
+            }
+			//
 			meta := &query_context.RequestMeta{
 				ClientAddr: clientAddr,
 			}
